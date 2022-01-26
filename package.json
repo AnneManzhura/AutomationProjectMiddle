@@ -19,7 +19,6 @@
         "wdio-reportportal-service": "^7.3.1"
     },
     "scripts": {
-        "wdio": "wdio run wdio.conf.js",
-        "test-jest": "jest"
+        "test": "wdio run ./test/wdio.conf.ts"
     }
 }

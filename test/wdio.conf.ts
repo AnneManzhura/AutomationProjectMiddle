@@ -1,17 +1,32 @@
-const { Reporter } = require('@reportportal/agent-js-webdriverio');
+const reportportal = require('wdio-reportportal-reporter');
+const RpService = require("wdio-reportportal-service");
+const path = require('path');
+const fs = require('fs');
 
-const configReporter = {
-    token: '00000000-0000-0000-0000-00000000000',
-    endpoint: 'http://your.reportportal.server:8080/api/v1',
-    project: 'YourReportPortalProjectName',
-    launch: 'YourLauncherName',
-    mode: 'DEFAULT',
-    debug: false,
-    description: "Static launch description",
-    attributes: [{ key: 'key', value: 'value' }, { value: 'value' }],
-    attachPicturesToLogs: false,
-    rerun: false,
-    rerunOf: 'launchUuid of already existed launch',
+const confReporter = {
+    reportPortalClientConfig: { // report portal settings
+        token: '6ea8bca4-c2e2-41dc-86af-9d6b2bc828c4',
+        endpoint: 'https://demo.reportportal.io/api/v1',
+        launch: 'annemanzhura_TEST_EXAMPLE',
+        project: 'annemanzhura_personal',
+        mode: 'DEFAULT',
+        debug: false,
+        description: "Middle Automation Project",
+        attributes: [{key:"browser", value: "chrome"}],
+        headers: {"foo": "bar"}, // optional headers for internal http client
+    },
+    reportSeleniumCommands: false, // add selenium commands to log
+    seleniumCommandsLogLevel: 'debug', // log level for selenium commands
+    autoAttachScreenshots: false, // automatically add screenshots
+    screenshotsLogLevel: 'info', // log level for screenshots
+    parseTagsFromTestTitle: false, // parse strings like `@foo` from titles and add to Report Portal
+    cucumberNestedSteps: false, // report cucumber steps as Report Portal steps
+    autoAttachCucumberFeatureToScenario: false, // requires cucumberNestedSteps to be true for use
+    sanitizeErrorMessages: true, // strip color ascii characters from error stacktrace
+    sauceLabOptions : {
+        enabled: true, // automatically add SauseLab ID to rp tags.
+        sldc: "US" // automatically add SauseLab region to rp tags.
+    }
 };
 
 export const config: WebdriverIO.Config = {
@@ -19,7 +34,7 @@ export const config: WebdriverIO.Config = {
     // ====================
     // Runner Configuration
     // ====================
-    // 
+    //
     //
     // =====================
     // ts-node Configurations
@@ -31,7 +46,7 @@ export const config: WebdriverIO.Config = {
     // and will compile your config and tests for you. 
     // If you need to configure how ts-node runs please use the
     // environment variables for ts-node or use wdio config's autoCompileOpts section.
-    //@reportportal/agent-js-webdriverio
+
     
     autoCompileOpts: {
         autoCompile: true,
@@ -113,7 +128,7 @@ export const config: WebdriverIO.Config = {
     // Define all options that are relevant for the WebdriverIO instance here
     //
     // Level of logging verbosity: trace | debug | info | warn | error | silent
-    logLevel: 'info',
+    logLevel: 'error',
     //
     // Set specific log levels per logger
     // loggers:
@@ -147,14 +162,15 @@ export const config: WebdriverIO.Config = {
     connectionRetryTimeout: 120000,
     //
     // Default request retries count
-    connectionRetryCount: 3,
+    connectionRetryCount: 0,
     //
     // Test runner services
     // Services take over a specific job you don't want to take care of. They enhance
     // your test setup with almost no effort. Unlike plugins, they don't add new
     // commands. Instead, they hook themselves up into the test process.
-    services: ['chromedriver','reportportal','image-comparison','novus-visual-regression'],
-    
+    services: ['chromedriver','reportportal', [RpService, {}]],
+    //'image-comparison','novus-visual-regression'
+
     // Framework you want to run your specs with.
     // The following are supported: Mocha, Jasmine, and Cucumber
     // see also: https://webdriver.io/docs/frameworks
@@ -175,7 +191,7 @@ export const config: WebdriverIO.Config = {
     // Test reporter for stdout.
     // The only one supported by default is 'dot'
     // see also: https://webdriver.io/docs/dot-reporter
-    reporters: ['spec',[Reporter, configReporter]],
+    reporters: ['spec',[reportportal, confReporter]],
 
 
     
@@ -271,8 +287,14 @@ export const config: WebdriverIO.Config = {
      * @param {Boolean} result.passed    true if test has passed, otherwise false
      * @param {Object}  result.retries   informations to spec related retries, e.g. `{ attempts: 0, limit: 0 }`
      */
-    // afterTest: function(test, context, { error, result, duration, passed, retries }) {
-    // },
+    /*afterTest(test) {
+        if (test.passed === false) {
+            const filename = "screnshot.png";
+            const outputFile = path.join(__dirname, filename);
+            browser.saveScreenshot(outputFile);
+            reportportal.sendFileToTest(test, 'info', filename, fs.readFileSync(outputFile));
+        }
+    }*/
 
 
     /**
